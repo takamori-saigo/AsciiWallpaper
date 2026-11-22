@@ -1,0 +1,93 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Platform;
+using Avalonia.Threading;
+using AsciiWallpaper.Controls;
+using AsciiWallpaper.Engine;
+using AsciiWallpaper.Platform;
+
+namespace AsciiWallpaper.Windows;
+
+/// <summary>Окно без рамки на весь экран, опущенное под иконки рабочего стола.</summary>
+public sealed class WallpaperWindow : Window
+{
+    public WallpaperWindow(Settings settings)
+    {
+        Title = "ASCII Wallpaper";
+        SystemDecorations = SystemDecorations.None;
+        CanResize = false;
+        ShowInTaskbar = false;
+        ShowActivated = false;
+        Focusable = false;
+        Background = Brushes.Black;
+        WindowStartupLocation = WindowStartupLocation.Manual;
+
+        Content = new AsciiCanvas(settings, new AsciiEngine(settings));
+    }
+
+    public void PlaceOn(Screen screen)
+    {
+        var b = screen.Bounds;
+        Position = b.Position;
+        Width = b.Width / screen.Scaling;
+        Height = b.Height / screen.Scaling;
+    }
+
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        MacDesktop.PinToDesktop(this);
+        // Avalonia может переставить окно после показа — закрепляем ещё раз
+        DispatcherTimer.RunOnce(() => MacDesktop.PinToDesktop(this), TimeSpan.FromMilliseconds(400));
+    }
+}
+
+/// <summary>Включает/выключает обои на всех мониторах.</summary>
+public static class WallpaperManager
+{
+    static readonly List<WallpaperWindow> Windows = new();
+
+    public static bool IsRunning => Windows.Count > 0;
+
+    public static event Action? StateChanged;
+
+    public static void Start(Settings settings)
+    {
+        Stop(save: false);
+
+        var first = new WallpaperWindow(settings);
+        var screens = first.Screens.All.ToList();
+        if (screens.Count == 0)
+        {
+            first.Show();
+            Windows.Add(first);
+        }
+        else
+        {
+            for (int i = 0; i < screens.Count; i++)
+            {
+                var w = i == 0 ? first : new WallpaperWindow(settings);
+                w.PlaceOn(screens[i]);
+                w.Show();
+                Windows.Add(w);
+            }
+        }
+
+        settings.WallpaperOn = true;
+        settings.Save();
+        StateChanged?.Invoke();
+    }
+
+    public static void Stop(Settings? settings = null, bool save = true)
+    {
+        foreach (var w in Windows) w.Close();
+        Windows.Clear();
+        if (save && settings != null)
+        {
+            settings.WallpaperOn = false;
+            settings.Save();
+        }
+        StateChanged?.Invoke();
+    }
+}
