@@ -33,6 +33,7 @@ public sealed class App : Application
 
             _settings = Settings.Load();
             SceneLibrary.Init(_settings);
+            MacDesktop.UseDarkAppearance();
             SetupTray();
 
             // если в прошлый раз обои были включены — включаем сразу и не мешаем окном галереи
@@ -74,7 +75,7 @@ public sealed class App : Application
 
     void Quit()
     {
-        WallpaperManager.Stop(save: false);
+        WallpaperManager.Stop(_settings, rememberOff: false); // вернёт прежнюю картинку рабочего стола
         _desktop?.Shutdown();
     }
 

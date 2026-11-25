@@ -5,6 +5,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using AsciiWallpaper.Controls;
 using AsciiWallpaper.Engine;
+using AsciiWallpaper.Platform;
 
 namespace AsciiWallpaper.Windows;
 
@@ -40,6 +41,12 @@ public sealed class GalleryWindow : Window
 
         _s.Changed += Refresh;
         WallpaperManager.StateChanged += Refresh;
+    }
+
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        MacDesktop.DarkTitleBar(this, 0x0e, 0x10, 0x15); // тёмный заголовок вместо белого на светлой теме
     }
 
     protected override void OnClosed(EventArgs e)
@@ -180,6 +187,16 @@ public sealed class GalleryWindow : Window
 
         p.Children.Add(Labeled("Частота кадров (меньше — экономнее батарея)", Combo(new[] { "30 FPS", "60 FPS" },
             _s.Fps >= 60 ? 1 : 0, i => { _s.Fps = i == 1 ? 60 : 30; _s.Touch(); })));
+
+        var darkBar = new CheckBox { Content = "Тёмная строка меню", IsChecked = _s.DarkMenuBar };
+        darkBar.IsCheckedChanged += (_, _) =>
+        {
+            _s.DarkMenuBar = darkBar.IsChecked == true;
+            _s.Touch();
+            WallpaperManager.ApplyMenuBarSetting(_s);
+        };
+        p.Children.Add(darkBar);
+        p.Children.Add(Hint("macOS красит строку меню по картинке рабочего стола, а не по обоям. Пока обои включены, ставим чёрную картинку, при выключении возвращаем твою."));
 
         return p;
     }

@@ -54,7 +54,7 @@ public static class WallpaperManager
 
     public static void Start(Settings settings)
     {
-        Stop(save: false);
+        CloseWindows();
 
         var first = new WallpaperWindow(settings);
         var screens = first.Screens.All.ToList();
@@ -74,20 +74,38 @@ public static class WallpaperManager
             }
         }
 
+        if (settings.DarkMenuBar) MacDesktop.UseBlackDesktopPicture(settings);
+
         settings.WallpaperOn = true;
         settings.Save();
         StateChanged?.Invoke();
     }
 
-    public static void Stop(Settings? settings = null, bool save = true)
+    /// <summary>Убрать обои. rememberOff = false — при выходе из приложения: в следующий раз обои включатся сами.</summary>
+    public static void Stop(Settings settings, bool rememberOff = true)
     {
-        foreach (var w in Windows) w.Close();
-        Windows.Clear();
-        if (save && settings != null)
+        bool wasRunning = IsRunning;
+        CloseWindows();
+        if (wasRunning || settings.SavedDesktopPictures.Count > 0) MacDesktop.RestoreDesktopPicture(settings);
+        if (rememberOff)
         {
             settings.WallpaperOn = false;
             settings.Save();
         }
         StateChanged?.Invoke();
+    }
+
+    /// <summary>Включили/выключили «тёмную строку меню», пока обои работают.</summary>
+    public static void ApplyMenuBarSetting(Settings settings)
+    {
+        if (!IsRunning) return;
+        if (settings.DarkMenuBar) MacDesktop.UseBlackDesktopPicture(settings);
+        else MacDesktop.RestoreDesktopPicture(settings);
+    }
+
+    static void CloseWindows()
+    {
+        foreach (var w in Windows) w.Close();
+        Windows.Clear();
     }
 }

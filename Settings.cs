@@ -25,6 +25,11 @@ public sealed class Settings
     public PlayMode PlayMode { get; set; } = PlayMode.Repeat;
     public bool WallpaperOn { get; set; }
 
+    /// <summary>Пока обои включены — чёрная картинка рабочего стола, чтобы строка меню была тёмной.</summary>
+    public bool DarkMenuBar { get; set; } = true;
+    /// <summary>Прежние картинки рабочего стола (по мониторам), чтобы вернуть их при выключении.</summary>
+    public List<string> SavedDesktopPictures { get; set; } = new();
+
     // ---------- розы ----------
     /// <summary>Ширина голов роз (1 = как нарисовано, меньше — уже).</summary>
     public float RoseWidth { get; set; } = 0.8f;
