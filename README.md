@@ -3,6 +3,8 @@
 Живые обои из цветных символов: розовые розы на чёрном фоне, которые вырастают
 из медленного дождя белых символов.
 
+**[⬇ Скачать .dmg](https://github.com/takamori-saigo/AsciiWallpaper/releases/latest)** · macOS 11+, Apple Silicon
+
 
 ![Розы под дождём](docs/screenshot.png)
 
